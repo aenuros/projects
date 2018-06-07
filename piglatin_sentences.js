@@ -11,6 +11,7 @@ can't handle punctuation
   that y be treated like a vowel to get 'ybay'.
 */
 
+//NOTE: commented out console.logs are for debugging purposes only.
 
 let consonant = ["b","c","d",
 "f","g","h","j","k","l","m",
