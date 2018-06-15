@@ -1,3 +1,15 @@
+/*TO-DO notes
+- the new inventory system does not play nice with smoothieRoll.
+  need to write a function to check if inventory is empty and use that for
+  displaying the inventory option at all and the smoothieroll.
+
+- Add a second item: pepper. Pepper causes mama's status to change to "peppersprayed"
+  so that she cannot attack for 2 turns. need to add an RNG, a use function, a 'status' variable for the enemy.
+
+- Add a constructor for "enemy" so that there are enemies other than Big Mama. Add an
+  RNG to determine which enemy appears.
+*/
+
 let readlineSync = require('readline-sync');
 let rl = require('readline-sync');
 /* https://www.npmjs.com/package/readline-sync */
@@ -6,6 +18,10 @@ let rl = require('readline-sync');
 
 function getRandom(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function move(array,old_index,new_index) {
+  array.splice(new_index,0,array.splice(old_index,1));
 }
 
 defaultHealth = 10;
@@ -18,13 +34,15 @@ let enemy = {
 let yourstatus = {
   name: "yourname",
   health: defaultHealth,
-  inventory: 0 //number of smoothies you have
+  inventory: 0, //number of smoothies you have
+  arrayOfStuff: ["smoothie","smoothie",""],
+  arrayMaxValues: 3
 }
 
 let battleState = 0;
 let spaces = 0;
 //number of spaces needed to win.
-winSpace = 10;
+winSpace = 99;
 /* the "moving forward" situation. if battleState becomes 1, run the enemy battle state.*/
 
 /*function greeting() {*/
@@ -39,20 +57,55 @@ winSpace = 10;
 
 //greeting();
 
+
+
+
+function inventoryDisplay() {
+  for (i=0;i<yourstatus.arrayMaxValues;i++) {
+    if (yourstatus.arrayOfStuff[i] !== undefined) {
+      console.log((i+1) + ". " + yourstatus.arrayOfStuff[i]);
+    }
+  }
+}
+
 function smoothieRoll() {
   smoothieDice = getRandom(1,2);
   if (smoothieDice === 2) {
     console.log(">>>You got a SMOOTHIE! If your health is low, a SMOOTHIE will heal you completely!");
-    yourstatus.inventory++;
+    yourstatus.arrayOfStuff.push("smoothie");
+    inventoryDisplay();
     //console.log(`Smoothies: ${yourstatus.inventory}. \n`);
   }
 }
 
 function smoothieUse() {
-  yourstatus.inventory--;
+  //yourstatus.inventory--;
+  //yourstatus.arrayOfStuff.pop();
   yourstatus.health = defaultHealth;
   console.log(`>>>You have used a smoothie and are at ${yourstatus.health} health.`);
 }
+
+function stuff() {
+  console.log(`Items: (1) ${yourstatus.arrayOfStuff[0]},(2) ${yourstatus.arrayOfStuff[1]},(3) ${yourstatus.arrayOfStuff[2]} `);
+}
+
+
+function inventoryUse(array,choice,length) {
+  realIndex = choice-1;
+//  if(!array[realIndex]) {
+//    console.log("Not an option.");
+//    return;
+//    }
+
+  //console.log("You used "+ array[realIndex]);
+
+    array[realIndex] = "";
+    for(let i = realIndex;i<length;i++) {
+      move(array,i+1,i);
+      console.log(array[i+1]);
+      }
+}
+
 
 while (battleState == 0) {
 
@@ -65,15 +118,17 @@ while (battleState == 0) {
 
   if (movement==="f") {
 
-    smoothieRoll();
+    if (yourstatus.arrayOfStuff.length < yourstatus.arrayMaxValues) {
+      smoothieRoll();
+    }
 
     let dice = getRandom(1,5);
     if (dice<5) {
       spaces++;
       console.log(`You have moved forward! You've traveled ${spaces} spaces.`);
-        if (yourstatus.inventory > 0) {
+        /*if (yourstatus.inventory > 0) {
           console.log(`Number of smoothies: ${yourstatus.inventory}.`);
-        }
+        }*/
     }
     else if(dice===5) {
       enemyAppeared();
@@ -112,16 +167,35 @@ function enemyAppeared() {
       let turn = 0;
 
         if (turn === 0) {
-          if (yourstatus.inventory > 0) {
-            let attack = rl.question("Do you (a)ttack or use a (s)moothie?\n");
+          if (yourstatus.arrayOfStuff.length > 0) {
+            let attack = rl.question("Do you (a)ttack or look at your (i)nventory?\n");
             if (attack === "a") {
               youAttack();
               turn++;
               }
-            if (attack ==="s") {
+            /*if (attack ==="s") {
               smoothieUse();
               turn++;
+            }*/
+
+            if (attack==="i") {
+              inventoryDisplay();
             }
+
+            if(!isNaN(attack)) {
+              if (yourstatus.arrayOfStuff[attack-1] === undefined || yourstatus.arrayOfStuff[attack-1] === "" || yourstatus.arrayOfStuff[attack-1] === null) {
+                console.log("Not a valid input.");
+              }
+              else {
+                if(yourstatus.arrayOfStuff[attack-1] === "smoothie") {
+
+                smoothieUse();
+                inventoryUse(yourstatus.arrayOfStuff,attack,yourstatus.arrayMaxValues);
+                turn++;
+                }
+              }
+            }
+
           }
 
           else {
