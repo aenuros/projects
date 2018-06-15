@@ -1,5 +1,17 @@
-//work in progress pig-latin. currently has issue with 3-consonant clusters.
-//in future you will be able to enter an entire sentence, have this chop it up, and spit each word out in pig latin.
+//it chops up sentences now :) updated June 9, 2018
+/* bugs: a word consisting of a consonant and 'y' is interpreted as
+having only consonants and is ignored. e.g. 'my'  also affects words like 'cs50'
+can't handle punctuation
+ forcibly turns everything to lowercase, doens't preserve case.
+ goals: preserve case.
+ goals: preserve punctuation (make it ignore punctuation?).
+ goals: treat words with 'y' as the vowel as a vowel. this situation
+  only applies to words that only have 'y' and a consonant, such as by,try,my.
+  a check needs to be added to ensure that if a word is 'all consonants',
+  that y be treated like a vowel to get 'ybay'.
+*/
+
+//NOTE: commented out console.logs are for debugging purposes only.
 
 let consonant = ["b","c","d",
 "f","g","h","j","k","l","m",
@@ -8,28 +20,42 @@ let consonant = ["b","c","d",
 
 let vowel = ["a","e","i","o","u"];
 
-var word = prompt("Enter a word.");
+let sentence = prompt("Enter a sentence").toLowerCase();
+console.log("You entered:\n \'" + sentence + "\'");
+let wordArray = sentence.split(" ");
 
+finalSentence = [];
 
-firstLetter = word.substring(0,word.length);
+for (i = 0; i < wordArray.length; i++) { 
+  newWord = wordArray[i];
+  endLetter ="";
+  firstLetter = newWord.substring(0,newWord.length);
+  /*console.log("You entered: \' " + firstLetter "\'");*/
+  finalWord = newWord;
+  
 
-endLetter = "";
+    for (j = 0; j <= newWord.length; j++) {
+      /*console.log("\nLength:" + newWord.length);*/
+      
 
-console.log(firstLetter);
+      if (consonant.includes(firstLetter[j])) {
+        
+        endLetter += firstLetter[j];
+        finalWord = finalWord.slice(1);
+/*        console.log("\nj:" + j + "\ni:" + i);
+      console.log("\nendLetter:" + endLetter + "\nfirstLetter:" + firstLetter + "\n" + "finalWord:" + finalWord); */
+        }
 
-for (i = 0; i < word.length; i++) {
-  if (consonant.includes(firstLetter[i])) {
-    word = word.substring(1);
-    endLetter += firstLetter[i];
-    console.log("The state of the word:" + word);
-    console.log("The consonant removed:" + firstLetter[i]);
-    console.log("The consonant at the end:" + endLetter);
-  }
+      if(vowel.includes(firstLetter[j])) {
+        finalSentence[i] = finalWord + endLetter + "ay";
+              /* console.log("\nVowel condition. \nj:" + j + "\ni:" + i);
+        console.log(i);
+        console.log(finalWord + endLetter + "ay");
+        console.log(finalSentence[i]); */
+        break;
+        }
+      
+    }
+ } 
 
-  if(vowel.includes(firstLetter[i])) {
-    break;
-  }
-
-}
-
-console.log(word + endLetter + "ay");
+console.log("Pig latin result:\n \'" + finalSentence.join(" ") + "\'");
