@@ -4,7 +4,7 @@
   displaying the inventory option at all and the smoothieroll. COMPLETED  19JUN
 
 - Add a second item: pepper. Pepper causes mama's status to change to "peppersprayed"
-  so that she cannot attack for 2 turns. need to add an RNG, a use function, a 'status' variable for the enemy.
+  so that she cannot attack for 3 turns. need to add an RNG, a use function, a 'status' variable for the enemy.COMPLETED  19JUN
 
 - Add a constructor for "enemy" so that there are enemies other than Big Mama. Add an
   RNG to determine which enemy appears.
@@ -13,7 +13,6 @@
 let readlineSync = require('readline-sync');
 let rl = require('readline-sync');
 /* https://www.npmjs.com/package/readline-sync */
-
 
 
 function isFull(array) {
@@ -41,7 +40,8 @@ defaultHealth = 10;
 
 let enemy = {
   name: "Big Mama",
-  health: defaultHealth
+  health: defaultHealth,
+  status:0
 }
 
 let yourstatus = {
@@ -81,25 +81,30 @@ function inventoryDisplay() {
   }
 }
 
-function smoothieRoll() {
-  smoothieDice = getRandom(1,2);
-  if (smoothieDice === 2) {
+
+function itemRoll() {
+  dice = getRandom(1,4);
+  //smoothie condition
+  if(dice < 3) {
     console.log(">>>You got a SMOOTHIE! If your health is low, a SMOOTHIE will heal you completely!");
     yourstatus.inventory.push("smoothie");
-    }
     inventoryDisplay();
-    //break;
+  }
+  if(dice > 2) {
+    console.log(">>>You got PEPPERSPRAY! Use PEPPERSPRAY to disable Mama for two turns!")
+    yourstatus.inventory.push("pepperspray");
+    inventoryDisplay();
+  }
 }
 
-
 function smoothieUse() {
-
   yourstatus.health = defaultHealth;
   console.log(`>>>You have used a smoothie and are at ${yourstatus.health} health.`);
 }
 
-function stuff() {
-  console.log(`Items: (1) ${yourstatus.inventory[0]},(2) ${yourstatus.inventory[1]},(3) ${yourstatus.inventory[2]} `);
+function peppersprayUse() {
+  enemy.status=3;
+  console.log(`>>>You used a pepper spray on Big Mama. She is currently unable to attack!`);
 }
 
 
@@ -121,7 +126,7 @@ while (battleState == 0) {
   if (movement==="f") {
 
     if (isFull(yourstatus.inventory) === false) {
-      smoothieRoll();
+      itemRoll();
     }
 
     let dice = getRandom(1,15);
@@ -159,24 +164,19 @@ function enemyAppeared() {
 
   enemy.health = defaultHealth;
 
-    while (enemy.health > 0 || yourstatus.health > 0) {
-      console.log(`\nYou've come across ${enemy.name}. She has ${enemy.health} health.`);
+  while (enemy.health > 0 || yourstatus.health > 0) {
+    console.log(`\nYou've come across ${enemy.name}. She has ${enemy.health} health.`);
 
     //a turn of 0 means you can attack. a turn of 1 means Mama attacks.
-
       let turn = 0;
 
-        if (turn === 0) {
-          if (yourstatus.inventory.length > 0) {
-            let attack = rl.question("Do you (a)ttack or look at your (i)nventory?\n");
-            if (attack === "a") {
+      if (turn === 0) {
+        //if (yourstatus.inventory.length > 0) {
+          let attack = rl.question("Do you (a)ttack or look at your (i)nventory?\n");
+          if (attack === "a") {
               youAttack();
               turn++;
               }
-            /*if (attack ==="s") {
-              smoothieUse();
-              turn++;
-            }*/
 
             if (attack==="i") {
               inventoryDisplay();
@@ -187,43 +187,51 @@ function enemyAppeared() {
                 console.log("Not a valid input.");
               }
               else {
-                if(yourstatus.inventory[attack-1] === "smoothie") {
-
-                smoothieUse();
-                inventoryUse(attack,yourstatus.inventory);
-                turn++;
-                }
+                switch(yourstatus.inventory[attack-1]) {
+                  case "smoothie":
+                    smoothieUse();
+                    inventoryUse(attack,yourstatus.inventory);
+                    turn++;
+                    break;
+                  case "pepperspray":
+                    peppersprayUse();
+                    inventoryUse(attack,yourstatus.inventory);
+                    turn++;
+                    break;
               }
             }
 
           }
-
-          else {
-            let attack = rl.question("Do you (a)ttack?\n");
-            youAttack();
-            turn++;
-            }
         }
 
 
         if (turn === 1) {
-          let attack = getRandom(1,3);
-          yourstatus.health = yourstatus.health - attack;
-          console.log(`\n>>>>Mama has inflicted ${attack} damage on you.`);
-          console.log(`You have ${yourstatus.health} health.`)
-          turn--;
-          }
 
           if (yourstatus.health <= 0) {
+              break;
+              }
 
-            break;
+            if (enemy.health <= 0) {
+              console.log("You win!");
+              break;
+              battleState=0;
             }
 
-          if (enemy.health <= 0) {
-            console.log("You win!");
-            break;
-            battleState=0;
+          if(enemy.status==0){
+            let attack = getRandom(1,3);
+            yourstatus.health = yourstatus.health - attack;
+            console.log(`\n>>>>Mama has inflicted ${attack} damage on you.`);
+            console.log(`You have ${yourstatus.health} health.`)
+            turn--;
+            }
+
+          else {
+            console.log(`Big Mama can't attack for ${enemy.status} turn(s).`);
+            enemy.status--;
+            }
+
           }
+
         }
 
-}
+      }
